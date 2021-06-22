@@ -1,5 +1,9 @@
 import React from 'react';
-import { View, Text } from 'react-native'
+import { 
+  StyleSheet,
+  View, 
+  Text 
+} from 'react-native'
 
 const Screen2 = () => {
   return (
