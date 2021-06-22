@@ -25,9 +25,9 @@ const Stack = createStackNavigator();
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteNamw="Screen1">
+      <Stack.Navigator initialRouteName="Screen1">
         <Stack.Screen name="Screen1" component={Screen1}/>
-        <Stack.Screen name="Screen2" componenet={Screen2}/>
+        <Stack.Screen name="Screen2" component={Screen2}/>
       </Stack.Navigator>
     </NavigationContainer>
   );
