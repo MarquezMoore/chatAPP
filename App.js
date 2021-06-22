@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   StyleSheet, 
   Text, 
@@ -15,19 +15,20 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
 // User Defined Components
-import Screen1 from './components/screen1'
-import Screen2 from './components/screen2'
+import Home from './components/home'
+import Chat from './components/chat'
 
 
 // The createStackNavigator is a method from the react-navigation/stack package the returns a Screen and Navigator object
 const Stack = createStackNavigator();
 
 export default function App() {
+
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Screen1">
-        <Stack.Screen name="Screen1" component={Screen1}/>
-        <Stack.Screen name="Screen2" component={Screen2}/>
+    <NavigationContainer style={styles.container}>
+      <Stack.Navigator initialRouteName="Home">
+        <Stack.Screen name="Home" component={Home}/>
+        <Stack.Screen name="Chat" component={Chat}/>
       </Stack.Navigator>
     </NavigationContainer>
   );
@@ -36,7 +37,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#0000',
     alignItems: 'center',
     justifyContent: 'center',
   },
