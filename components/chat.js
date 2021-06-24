@@ -6,14 +6,19 @@ import {
 } from 'react-native'
 
 const Chat = ({ route, navigation }) => {
-  const { name } = route.params;
+  const { name, backgroundColor } = route.params;
 
   React.useEffect(() => {
-    navigation.setOptions({title: name});
-  });
+    navigation.setOptions({title: name });
+  }, []);
   
   return (
-    <View style={styles.container}>
+    <View style={{
+      flex: 1,
+      backgroundColor: backgroundColor,
+      justifyContent: 'center',
+      alignItems: 'center'
+    }}>
       <Text>
         Chat
       </Text>
@@ -21,13 +26,13 @@ const Chat = ({ route, navigation }) => {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0000',
-    justifyContent: 'center',
-    alignItems: 'center'
-  }
-})
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: '#0000',
+//     justifyContent: 'center',
+//     alignItems: 'center'
+//   }
+// })
 
 export default Chat;
