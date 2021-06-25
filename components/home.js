@@ -10,13 +10,14 @@ import {
   ImageBackground,
   TouchableOpacity,
   KeyboardAvoidingView
-} from 'react-native'
+} from 'react-native';
 
 
 const Home = ({ navigation }) => {
   const [ inputVal, setInputVal ] = useState('');
   const [ backgroundColor, setBackgroundColor ] = useState('');
 
+  // When called this function will use the navigator the navigate to the chat screen, whilst passing name of user and background color 
   const handlePress = e => {
     navigation.navigate('Chat', {
       name: inputVal,
@@ -24,7 +25,7 @@ const Home = ({ navigation }) => {
     })
   }
 
- 
+  // Color opotion for chat screen 
   const colors = [ '#090C08', '#474056', '#8A95A5', '#B9C6AE' ]
 
   return (
@@ -50,6 +51,7 @@ const Home = ({ navigation }) => {
             <View style={styles.colorOptionsContainer}>
               <Text style={styles.colorOptionsTitle}>Choose Background Color:</Text>
               <View style={styles.colorOptions}>
+                {/* Map through the color and render the respective component in the current color */}
                 {
                   colors.map( (c, i) => {
                     return (
@@ -75,12 +77,12 @@ const Home = ({ navigation }) => {
               <Text style={styles.buttonText}>Start Chatting</Text>
             </Pressable>
           </View>
-
         </ImageBackground>
     </KeyboardAvoidingView>
   )
 }
 
+// Start for screen styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
