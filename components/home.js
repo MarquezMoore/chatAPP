@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { 
   StyleSheet,
+  Image,
   View, 
   Text, 
   Pressable,
+  Platform,
   TextInput,
   ImageBackground,
-  TouchableOpacity
+  TouchableOpacity,
+  KeyboardAvoidingView
 } from 'react-native'
 
 
@@ -15,7 +18,6 @@ const Home = ({ navigation }) => {
   const [ backgroundColor, setBackgroundColor ] = useState('');
 
   const handlePress = e => {
-    // setName(e.target.value);
     navigation.navigate('Chat', {
       name: inputVal,
       backgroundColor: backgroundColor
@@ -26,53 +28,56 @@ const Home = ({ navigation }) => {
   const colors = [ '#090C08', '#474056', '#8A95A5', '#B9C6AE' ]
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView 
+      style={styles.container} 
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ImageBackground source={require('../assets/backgroundImage.png')} style={styles.backgroundImage}>
 
-      <ImageBackground source={require('../assets/backgroundImage.png')} style={styles.backgroundImage}>
-
-        <View style={styles.headerContainer}>
-          <Text style={styles.title}>Lets Chat!</Text>
-        </View>
-
-        <View style={styles.inputContainer}>
-          <TextInput 
-            style={styles.input}
-            type="text" 
-            onChangeText={inputVal => setInputVal(inputVal)}
-            defaultValue={inputVal}
-            placeholder="Enter name"
-          />
-          <View style={styles.colorOptionsContainer}>
-            <Text style={styles.colorOptionsTitle}>Choose Background Color:</Text>
-            <View style={styles.colorOptions}>
-              {
-                colors.map( (c, i) => {
-                  return (
-                    <TouchableOpacity 
-                      key={`color-${i}`} 
-                      style={{
-                        width: 50,
-                        height: 50,
-                        marginRight: 20,
-                        borderRadius: 25,
-                        backgroundColor: c
-                      }}
-                      onPress={() => setBackgroundColor(c)}/>
-                  )
-                })
-              }
-            </View>
+          <View style={styles.headerContainer}>
+            <Text style={styles.title}>Lets Chat!</Text>
           </View>
-          <Pressable 
-            style={styles.button}
-            onPress={handlePress} 
-            >
-            <Text style={styles.buttonText}>Start Chatting</Text>
-          </Pressable>
-        </View>
 
-      </ImageBackground>
-    </View>
+          <View style={styles.inputContainer}>
+            <Image style={styles.inputIcon} source={require('../assets/icon.svg')} />
+            <TextInput 
+              style={styles.input}
+              type="text" 
+              onChangeText={inputVal => setInputVal(inputVal)}
+              defaultValue={inputVal}
+              placeholder="Enter name"
+            />
+            <View style={styles.colorOptionsContainer}>
+              <Text style={styles.colorOptionsTitle}>Choose Background Color:</Text>
+              <View style={styles.colorOptions}>
+                {
+                  colors.map( (c, i) => {
+                    return (
+                      <TouchableOpacity 
+                        key={`color-${i}`} 
+                        style={{
+                          width: 50,
+                          height: 50,
+                          marginRight: 20,
+                          borderRadius: 25,
+                          backgroundColor: c
+                        }}
+                        onPress={() => setBackgroundColor(c)}/>
+                    )
+                  })
+                }
+              </View>
+            </View>
+            <Pressable 
+              style={styles.button}
+              onPress={handlePress} 
+              >
+              <Text style={styles.buttonText}>Start Chatting</Text>
+            </Pressable>
+          </View>
+
+        </ImageBackground>
+    </KeyboardAvoidingView>
   )
 }
 
@@ -103,6 +108,7 @@ const styles = StyleSheet.create({
 
   },
   inputContainer: {
+    position: 'relative',
     width: '88%',
     height: '44%',
     backgroundColor: '#FFFFFF',
@@ -121,6 +127,12 @@ const styles = StyleSheet.create({
     color: '#757083', 
     opacity: 50,
     paddingLeft: 50 
+  },
+  inputIcon: {
+    position: 'absolute', 
+    backgroundColor: 'red', 
+    left: 37, 
+    top: 35
   },
   colorOptionsContainer: {
     justifyContent: 'flex-start',
