@@ -3,11 +3,10 @@ import {
   StyleSheet,
   View, 
   Text,
-  Bubble,
   KeyboardAvoidingView,
   Platform
 } from 'react-native';
-import { GiftedChat } from 'react-native-gifted-chat';
+import { GiftedChat, Bubble } from 'react-native-gifted-chat';
 import PropTypes from 'prop-types';
 
 const Chat = ({ route, navigation }) => {
@@ -51,24 +50,25 @@ const Chat = ({ route, navigation }) => {
       {...props}
       wrapperStyle = {{
         right: {
-          backgroundColor: 'red',
+          backgroundColor: '#7777',
+          color: '#FFF'
         },
         left: {
-          backgroundColor: 'blue',
+          backgroundColor: '#FFF',
         }
       }} />
     );
   }
   
   return (
-    <View style={{flex: 1}}>
+    <View style={{flex: 1, backgroundColor: backgroundColor, zIndex: -1000, }}>
       <GiftedChat
         messages={messages}
         onSend={messages => onSend(messages)}
         user={{
           _id: 1,
         }}
-        // renderBubble={renderBubble}
+        renderBubble={renderBubble}
       />
       { Platform.OS === 'android' ? <KeyboardAvoidingView behavior="height" /> : null}
     </View>
