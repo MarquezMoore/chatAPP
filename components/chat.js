@@ -30,7 +30,7 @@ const Chat = ({ route, navigation }) => {
       },
       {
         _id: 2,
-        text: messages.length === 2 ? `Hello ${name}! Thanks for entering the chat!` : null,
+        text: messages.length > 2 ? `Hello ${name}! Thanks for entering the chat!` : null,
         createdAt: new Date(),
         system: true,
       },
