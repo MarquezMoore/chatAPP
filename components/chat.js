@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef} from 'react';
 import { 
   StyleSheet,
   View, 
   Text,
   KeyboardAvoidingView,
-  Platform
+  Platform,
 } from 'react-native';
-import { GiftedChat, InputToolBar, Bubble } from 'react-native-gifted-chat';
+import { GiftedChat, InputToolbar, Bubble } from 'react-native-gifted-chat';
 // Firebase is a package for connecting with cloud base db solution provided by Google
 import firebase from 'firebase';
 import 'firebase/firestore';
@@ -16,7 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 
 // Your web app's Firebase configuration
-var firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyB6Qcfrdm4tPj6hBTcfV_RWiUp-ttcCrtY",
   authDomain: "chatapp-c3e03.firebaseapp.com",
   projectId: "chatapp-c3e03",
@@ -36,7 +36,8 @@ const chatMessagesRef = db.collection('messages');
 const Chat = ({ route, navigation }) => {
   const [ messages, setMessages ] = useState([]);
   const [ uid, setUid ] = useState('');
-  const [ networkStatus, setNetworkStatus ] = useState(null);
+  const [ online, setOnline ] = useState(false);
+  const isMounted = useRef(false);
 
   const { name, backgroundColor } = route.params;
 
@@ -104,7 +105,7 @@ const Chat = ({ route, navigation }) => {
     // Update networkStatus
     NetInfo.fetch().then(connection => {
       if (connection.isConnected) {
-        setNetworkStatus('Online');
+        setOnline(true);
         console.log('Online');
 
         // Set the screen title to name prop passed from Home screen
@@ -128,16 +129,20 @@ const Chat = ({ route, navigation }) => {
           unsubscribeMessages();
         }
       } else {
-        setNetworkStatus('Offline');
+        setOnline(false);
         console.log('Offline')
+        getMessages();
       }
     });
   }, [])
 
   // updates the asyncStorage messages when new messages are added
   useEffect(() => {
-    console.log('messages updated')
-    saveMessages();
+    if(isMounted.current) {
+      saveMessages();
+    }
+
+    isMounted.current = true;
   }, [messages])
 
   // Use Callback hook prevent this method from be recreated every render. 
@@ -183,15 +188,7 @@ const Chat = ({ route, navigation }) => {
 
   // Function used to enable the InputToolBar is the use is online and disable if out
   const renderInputToolBar = props => {
-    console.log('rednerInputToolBar')
-    if (networkStatus === 'Offline') {
-    } else {
-      return(
-        <InputToolbar
-        {...props}
-        />
-      );
-    }
+    return online ? <InputToolbar {...props} /> : false;
   }
   
   return (
@@ -205,11 +202,12 @@ const Chat = ({ route, navigation }) => {
           avatar: 'https://placeimg.com/140/140/any'
         }}
         renderBubble={renderBubble}
-        renderInputToolBar={renderInputToolBar}
+        renderInputToolbar={renderInputToolBar}
       />
       { Platform.OS === 'android' ? <KeyboardAvoidingView behavior="height" /> : null}
     </View>
   )
+  
 }
 
 export default Chat;
