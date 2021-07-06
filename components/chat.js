@@ -6,10 +6,14 @@ import {
   KeyboardAvoidingView,
   Platform
 } from 'react-native';
-import { GiftedChat, Bubble } from 'react-native-gifted-chat';
-import PropTypes from 'prop-types';
-import firebase from 'firebase'
-import 'firebase/firestore'
+import { GiftedChat, InputToolBar, Bubble } from 'react-native-gifted-chat';
+// Firebase is a package for connecting with cloud base db solution provided by Google
+import firebase from 'firebase';
+import 'firebase/firestore';
+// AsyncStorage in a package used to add localStorage like functionality to a native app
+import AsyncStorage from '@react-native-async-storage/async-storage';
+// NetInfo in a package used to determine the network status of the client
+import NetInfo from '@react-native-community/netinfo';
 
 // Your web app's Firebase configuration
 var firebaseConfig = {
@@ -32,49 +36,81 @@ const chatMessagesRef = db.collection('messages');
 const Chat = ({ route, navigation }) => {
   const [ messages, setMessages ] = useState([]);
   const [ uid, setUid ] = useState('');
+  const [ networkStatus, setNetworkStatus ] = useState(null);
+
   const { name, backgroundColor } = route.params;
 
-  useEffect(() => {
-    // Set the screen title to name prop passed from Home screen
-    navigation.setOptions({title: name });
-    // Set default messages
-      // setMessages([
-      //   {
-      //     _id: 1,
-      //     text: 'Hello developer',
-      //     createdAt: new Date(),
-      //     user: {
-      //       _id: 2,
-      //       name: 'React Native',
-      //       avatar: 'https://placeimg.com/140/140/any',
-      //     },
-      //   },
-      //   {
-      //     _id: 2,
-      //     text: messages.length > 2 ? `Hello ${name}! Thanks for entering the chat!` : null,
-      //     createdAt: new Date(),
-      //     system: true,
-      //   },
-      // ])
-
-    // Create the athenticate for users
-    let unsubscribe;
-    const authUnsubscribe = firebase.auth().onAuthStateChanged((user) => {
-      if (!user) {
-        firebase.auth().signInAnonymously();
-      }
-
-      setUid(user.uid);
-      
-      unsubscribe = chatMessagesRef.orderBy("createdAt", "desc").onSnapshot(onCollectionUpdate);
-    });
-
-    // componentWillUnmount
-    return () => {
-      authUnsubscribe();
-      unsubscribe();
+  // Get messages
+  const getMessages = async () => {
+    let messages = '';
+    try {
+      messages = await AsyncStorage.getItem('messages') || [];
+      console.log(messages);
+      setMessages(JSON.parse(messages));
+    } catch (error) {
+      console.log(error.message);
     }
+  };
+
+  // Save messages
+  const saveMessages = async () => {
+    try {
+      await AsyncStorage.setItem('messages', JSON.stringify(messages));
+    } catch (error) {
+      console.log(error.message);
+    }
+  }
+
+  // Delete messages
+  const deleteMessages = async () => {
+    try {
+      await AsyncStorage.removeItem('messages');
+      setMessags(messages)
+    } catch (error) {
+      console.log(error.message);
+    }
+  }
+
+  useEffect(() => {
+    let unsubscribeMessages;
+    let unsubscribeAuth
+    // Update networkStatus
+    NetInfo.fetch().then(connection => {
+      if (connection.isConnected) {
+        setNetworkStatus('Online');
+        console.log('Online');
+
+        // Set the screen title to name prop passed from Home screen
+        navigation.setOptions({title: name });
+      
+        // Create the athenticate for users
+        
+        unsubscribeAuth = firebase.auth().onAuthStateChanged((user) => {
+          if (!user) {
+            firebase.auth().signInAnonymously();
+          }
+
+          setUid(user.uid);
+          
+          unsubscribeMessages = chatMessagesRef.orderBy("createdAt", "desc").onSnapshot(onCollectionUpdate);
+        });
+
+        // componentWillUnmount
+        return () => {
+          unsubscribeAuth();
+          unsubscribeMessages();
+        }
+      } else {
+        setNetworkStatus('Offline');
+        console.log('Offline')
+        getMessages();
+      }
+    });
   }, [])
+
+  useEffect(() => {
+    saveMessages();
+  }, [messages])
 
   const onCollectionUpdate = (querySnapshot) => {
     const messages = [];
@@ -96,8 +132,10 @@ const Chat = ({ route, navigation }) => {
   // Use Callback hook prevent this method from be recreated every render. 
   const onSend = useCallback((message = []) => {
     // The GiftedChat.append mehtod appends the previous state with the current item to be added
-    setMessages(previousMessages => GiftedChat.append(previousMessages, message))
+    setMessages(previousMessages => GiftedChat.append(previousMessages, message));
+
     const m = message[0]
+
     try{
       db.collection('messages').add({
         _id: m._id,
@@ -115,7 +153,7 @@ const Chat = ({ route, navigation }) => {
     }
   }, [])
 
-  // This functino will be used to define color of message bubbles
+  // Function be used to define color of message bubbles
   const renderBubble = props => {
     return (
       <Bubble
@@ -131,6 +169,19 @@ const Chat = ({ route, navigation }) => {
       }} />
     );
   }
+
+  // Function used to enable the InputToolBar is the use is online and disable if out
+  const renderInputToolBar = props => {
+    console.log('rednerInputToolBar')
+    if (networkStatus === 'Offline') {
+    } else {
+      return(
+        <InputToolbar
+        {...props}
+        />
+      );
+    }
+  }
   
   return (
     <View style={{flex: 1, backgroundColor: backgroundColor, zIndex: -1000, }}>
@@ -143,15 +194,11 @@ const Chat = ({ route, navigation }) => {
           avatar: 'https://placeimg.com/140/140/any'
         }}
         renderBubble={renderBubble}
+        renderInputToolBar={renderInputToolBar}
       />
       { Platform.OS === 'android' ? <KeyboardAvoidingView behavior="height" /> : null}
     </View>
   )
 }
-
-// Chat.propTypes = {
-//   route: PropType.object,
-//   navigation: PropTpe.object
-// }
 
 export default Chat;
