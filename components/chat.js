@@ -40,12 +40,16 @@ const Chat = ({ route, navigation }) => {
 
   const { name, backgroundColor } = route.params;
 
+/*
+  Custom component methods
+*/
+
   // Get messages
   const getMessages = async () => {
     let messages = '';
     try {
       messages = await AsyncStorage.getItem('messages') || [];
-      console.log(messages);
+      console.log('Messages being fetched from asyncStorge')
       setMessages(JSON.parse(messages));
     } catch (error) {
       console.log(error.message);
@@ -56,6 +60,7 @@ const Chat = ({ route, navigation }) => {
   const saveMessages = async () => {
     try {
       await AsyncStorage.setItem('messages', JSON.stringify(messages));
+      console.log('Messages saved to asyncStorge')
     } catch (error) {
       console.log(error.message);
     }
@@ -65,12 +70,34 @@ const Chat = ({ route, navigation }) => {
   const deleteMessages = async () => {
     try {
       await AsyncStorage.removeItem('messages');
-      setMessags(messages)
+      setMessags([]);
     } catch (error) {
       console.log(error.message);
     }
   }
 
+  const onCollectionUpdate = (querySnapshot) => {
+    const messages = [];
+    // go through each document
+    querySnapshot.forEach( doc => {
+      // get the QueryDocumentSnapshot's data
+      let data = doc.data();
+      messages.push({
+        _id: data._id,
+        text: data.text,
+        createdAt: data.createdAt.toDate(),
+        user: data.user,
+      });
+    });
+
+    setMessages(messages);
+  }
+
+/*
+  Component lifecycle methods
+*/
+
+  // componentDidMount
   useEffect(() => {
     let unsubscribeMessages;
     let unsubscribeAuth
@@ -108,26 +135,11 @@ const Chat = ({ route, navigation }) => {
     });
   }, [])
 
+  // updates the asyncStorage messages when new messages are added
   useEffect(() => {
+    console.log('messages updated')
     saveMessages();
   }, [messages])
-
-  const onCollectionUpdate = (querySnapshot) => {
-    const messages = [];
-    // go through each document
-    querySnapshot.forEach( doc => {
-      // get the QueryDocumentSnapshot's data
-      let data = doc.data();
-      messages.push({
-        _id: data._id,
-        text: data.text,
-        createdAt: data.createdAt.toDate(),
-        user: data.user,
-      });
-    });
-
-    setMessages(messages);
-  }
 
   // Use Callback hook prevent this method from be recreated every render. 
   const onSend = useCallback((message = []) => {
