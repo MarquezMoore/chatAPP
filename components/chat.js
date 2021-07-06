@@ -11,7 +11,8 @@ import { GiftedChat, InputToolBar, Bubble } from 'react-native-gifted-chat';
 import firebase from 'firebase';
 import 'firebase/firestore';
 // AsyncStorage in a package used to add localStorage like functionality to a native app
-import AsyncStorage from '@react-native-async-storage/async-storage';
+// import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from '@react-native-community/async-storage';
 // NetInfo in a package used to determine the network status of the client
 import NetInfo from '@react-native-community/netinfo';
 
