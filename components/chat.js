@@ -15,6 +15,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // NetInfo in a package used to determine the network status of the client
 import NetInfo from '@react-native-community/netinfo';
 
+import CustomActions from '../components/customActions'
+
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyB6Qcfrdm4tPj6hBTcfV_RWiUp-ttcCrtY",
@@ -190,6 +192,10 @@ const Chat = ({ route, navigation }) => {
   const renderInputToolBar = props => {
     return online ? <InputToolbar {...props} /> : false;
   }
+
+  const renderCustomActions = props => {
+    return  <CustomActions {...props} />;
+  }
   
   return (
     <View style={{flex: 1, backgroundColor: backgroundColor, zIndex: -1000, }}>
@@ -202,6 +208,7 @@ const Chat = ({ route, navigation }) => {
           avatar: 'https://placeimg.com/140/140/any'
         }}
         renderBubble={renderBubble}
+        renderActions={renderCustomActions}
         renderInputToolbar={renderInputToolBar}
       />
       { Platform.OS === 'android' ? <KeyboardAvoidingView behavior="height" /> : null}
