@@ -3,7 +3,8 @@ import PropTypes from 'prop-types';
 import { View, Text, Button, TouchableOpacity, StyleSheet } from 'react-native'
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
-import MapView from 'react-native-maps';
+import firebase from 'firebase';
+
 
 class CustomActions extends React.Component {
   constructor(props) {
@@ -15,28 +16,32 @@ class CustomActions extends React.Component {
   }
   
   onActionPress = () => {
-    const options = ['Choose From Library', 'Take Picture', 'Send Location', 'Cancel'];
-    const cancelButtonIndex = options.length - 1;
+    try{
+      const options = ['Choose From Library', 'Take Picture', 'Send Location', 'Cancel'];
+      const cancelButtonIndex = options.length - 1;
 
-    this.context.actionSheet().showActionSheetWithOptions(
-      {
-        options,
-        cancelButtonIndex,
-      },
-      async (buttonIndex) => {
-        switch (buttonIndex) {
-          case 0:
-            this.pickImage();
-            return;
-          case 1:
-            this.takePhoto();
-            return;
-          case 2:
-            this.getLocation();
-          default:
-        }
-      },
-    );
+      this.context.actionSheet().showActionSheetWithOptions(
+        {
+          options,
+          cancelButtonIndex,
+        },
+        async (buttonIndex) => {
+          switch (buttonIndex) {
+            case 0:
+              this.pickImage();
+              return;
+            case 1:
+              this.takePhoto();
+              return;
+            case 2:
+              this.getLocation();
+            default:
+          }
+        },
+      );
+    }catch(e){
+      console.log(`onActionPress err: ${e}`)
+    }
   }; 
 
   pickImage = async () => {
@@ -44,7 +49,11 @@ class CustomActions extends React.Component {
     
     if (library.status !== 'granted') return alert('Sorry, we need camera roll permissions to make this work!');
   
+    try{
 
+    }catch (e) {
+      console.log(`pickImage err: ${e}`);
+    }
     let image = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -53,45 +62,81 @@ class CustomActions extends React.Component {
     });
 
     if (!image.cancelled) {
-      this.setState({
-        image: image.uri
-      });
+      const imageURL = await this.uploadImageFetch(image.uri)
+      this.props.onSend({image: imageURL })
     }
   };
 
   takePhoto = async () => {
-    const camera = await ImagePicker.requestCameraPermissionsAsync();
-    const library = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    try{
+      const camera = await ImagePicker.requestCameraPermissionsAsync();
+      const library = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  
+      if (camera.status && library.status !== 'granted') return alert( `Camera and photo library access is needed to use this functionality`)
 
-    console.log(`Library Access: ${library.status}`)
-    console.log(`Camera Access: ${camera.status}`)
-
-    if (camera.status && library.status !== 'granted') return alert( `Camera and photo library access is needed to use this functionality`)
-
-    let image = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    })
-
-    this.setState({
-      image: image.uri
-    });
+      let result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      })   
+      // Get the image blob and add the image to the onSend prop
+      if(!result.cancelled){
+        const imageURL = await this.uploadImageFetch(result.uri);
+        this.props.onSend({ image: imageURL });        
+      }
+    } catch(e) {
+      console.log(`takePhoto err: ${e}`);
+    }
   }
   
   getLocation = async () =>{
-    const locationAccess = await Location.requestForegroundPermissionsAsync();
+    try{
+      const locationAccess = await Location.requestForegroundPermissionsAsync();
 
+      if( locationAccess.status === 'granted') {
+        let location = await Location.getCurrentPositionAsync({});
 
-    if( locationAccess.status === 'granted') {
-      let location = await Location.getCurrentPositionAsync({});
+        if (location){
+          this.props.onSend({
+            location: {
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude
+            },
+          })
+        }
 
-      if (location){
-        this.setState({
-          location: location
-        });
       }
+    }catch(e) {
+      console.log(`getLocation err: ${e}`);
+    }
+  }
+
+  uploadImageFetch = async (uri) => {
+    try{
+      const blob = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.onload = function() {
+          resolve(xhr.response);
+        };
+        xhr.onerror = function(e) {
+          console.log(e);
+          reject(new TypeError('Network request failed'));
+        };
+        xhr.responseType = 'blob';
+        xhr.open('GET', uri, true);
+        xhr.send(null);
+      });
+  
+      const imageNameBefore = uri.split("/");
+      const imageName = imageNameBefore[imageNameBefore.length - 1];
+      const ref = firebase.storage().ref().child(`images/${imageName}`);
+      const snapshot = await ref.put(blob);
+      blob.close();
+  
+      return await snapshot.ref.getDownloadURL();
+    }catch(e) {
+      console.log(`uploadImageFetch err: ${e}`)
     }
   }
 

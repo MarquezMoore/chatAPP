@@ -16,7 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 
 import CustomActions from '../components/customActions'
-
+import MapView from 'react-native-maps';
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyB6Qcfrdm4tPj6hBTcfV_RWiUp-ttcCrtY",
@@ -39,8 +39,6 @@ const Chat = ({ route, navigation }) => {
   const [ messages, setMessages ] = useState([]),
     [ uid, setUid ] = useState(''),
     [ online, setOnline ] = useState(false),
-    [image, setImage ] = useState(null),
-    [ location, setLocation ] = useState(null),
     isMounted = useRef(false);
 
   const { name, backgroundColor } = route.params;
@@ -77,18 +75,16 @@ const Chat = ({ route, navigation }) => {
     try{
       db.collection('messages').add({
         _id: m._id,
-        text: m.text,
+        text: m.text ? m.text : null,
         createdAt: m.createdAt,
         user: {
           _id: m.user._id,
           name: m.user.name,
           avatar: m.user.avatar
         },
-        image: m.image || null,
-        location: m.location || null
+        image: m.image ? m.image : null,
+        location: m.location ? m.location : null
       })
-
-      console.log()
     } 
     catch( err ) {
       console.log( err )
@@ -168,6 +164,7 @@ const Chat = ({ route, navigation }) => {
   // updates the asyncStorage messages when new messages are added
   useEffect(() => {
     if(isMounted.current) {
+      console.log('Saving messages')
       saveMessages();
     }
 
@@ -176,7 +173,6 @@ const Chat = ({ route, navigation }) => {
 
   // Use Callback hook prevent this method from be recreated every render. 
   const onSend = useCallback((message = []) => {
-    console.log(message)
     // The GiftedChat.append mehtod appends the previous state with the current item to be added
     setMessages(previousMessages => GiftedChat.append(previousMessages, message));
     addMessage(message[0])
@@ -218,8 +214,8 @@ const Chat = ({ route, navigation }) => {
               borderRadius: 13,
               margin: 3}}
             region={{
-              latitude: Number(currentMessage.location.latitude),
-              longitude: Number(currentMessage.location.longitude),
+              latitude: currentMessage.location.latitude,
+              longitude: currentMessage.location.longitude,
               latitudeDelta: 0.0922,
               longitudeDelta: 0.0421
             }}
@@ -232,6 +228,7 @@ const Chat = ({ route, navigation }) => {
   return (
     <View style={{flex: 1, backgroundColor: backgroundColor, zIndex: -1000, }}>
       <GiftedChat
+        text= ''
         messages={messages}
         onSend={message => onSend(message)}
         user={{
@@ -241,7 +238,7 @@ const Chat = ({ route, navigation }) => {
         }}
         renderBubble={renderBubble}
         renderActions={renderCustomActions}
-        renderView={renderCustomView}
+        renderCustomView={renderCustomView}
         renderInputToolbar={renderInputToolBar}
         renderUsernameOnMessage={true}
       />
