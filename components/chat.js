@@ -36,10 +36,12 @@ const chatMessagesRef = db.collection('messages');
 
 
 const Chat = ({ route, navigation }) => {
-  const [ messages, setMessages ] = useState([]);
-  const [ uid, setUid ] = useState('');
-  const [ online, setOnline ] = useState(false);
-  const isMounted = useRef(false);
+  const [ messages, setMessages ] = useState([]),
+    [ uid, setUid ] = useState(''),
+    [ online, setOnline ] = useState(false),
+    [image, setImage ] = useState(null),
+    [ location, setLocation ] = useState(null),
+    isMounted = useRef(false);
 
   const { name, backgroundColor } = route.params;
 
@@ -69,6 +71,29 @@ const Chat = ({ route, navigation }) => {
     }
   }
 
+  const addMessage = currentMessage => {
+    const m = currentMessage
+
+    try{
+      db.collection('messages').add({
+        _id: m._id,
+        text: m.text,
+        createdAt: m.createdAt,
+        user: {
+          _id: m.user._id,
+          name: m.user.name,
+          avatar: m.user.avatar
+        },
+        image: m.image || null,
+        location: m.location || null
+      })
+
+      console.log()
+    } 
+    catch( err ) {
+      console.log( err )
+    }
+  }
   // Delete messages
   const deleteMessages = async () => {
     try {
@@ -90,6 +115,8 @@ const Chat = ({ route, navigation }) => {
         text: data.text,
         createdAt: data.createdAt.toDate(),
         user: data.user,
+        image: data.image || null,
+        location: data.location || null
       });
     });
 
@@ -149,26 +176,10 @@ const Chat = ({ route, navigation }) => {
 
   // Use Callback hook prevent this method from be recreated every render. 
   const onSend = useCallback((message = []) => {
+    console.log(message)
     // The GiftedChat.append mehtod appends the previous state with the current item to be added
     setMessages(previousMessages => GiftedChat.append(previousMessages, message));
-
-    const m = message[0]
-
-    try{
-      db.collection('messages').add({
-        _id: m._id,
-        text: m.text,
-        createdAt: m.createdAt,
-        user: {
-          _id: m.user._id,
-          name: m.user.name,
-          avatar: m.user.avatar
-        }
-      })
-    } 
-    catch( err ) {
-      console.log( err )
-    }
+    addMessage(message[0])
   }, [])
 
   // Function be used to define color of message bubbles
@@ -196,6 +207,27 @@ const Chat = ({ route, navigation }) => {
   const renderCustomActions = props => {
     return  <CustomActions {...props} />;
   }
+
+  const renderCustomView = props  => {
+    const { currentMessage } = props;
+    if (currentMessage.location) {
+      return (
+          <MapView
+            style={{width: 150,
+              height: 100,
+              borderRadius: 13,
+              margin: 3}}
+            region={{
+              latitude: Number(currentMessage.location.latitude),
+              longitude: Number(currentMessage.location.longitude),
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421
+            }}
+          />
+      );
+    }
+    return null;
+  }
   
   return (
     <View style={{flex: 1, backgroundColor: backgroundColor, zIndex: -1000, }}>
@@ -209,7 +241,9 @@ const Chat = ({ route, navigation }) => {
         }}
         renderBubble={renderBubble}
         renderActions={renderCustomActions}
+        renderView={renderCustomView}
         renderInputToolbar={renderInputToolBar}
+        renderUsernameOnMessage={true}
       />
       { Platform.OS === 'android' ? <KeyboardAvoidingView behavior="height" /> : null}
     </View>
